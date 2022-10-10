@@ -1,4 +1,3 @@
-import json
 import re
 import string
 from configparser import ConfigParser
@@ -23,19 +22,12 @@ class Config:
 
         walkerItems = dict(parser.items("walker"))
         self._pathItems = pathItems = dict(parser.items("project-path"))
-        rawPrjs = re.split(r"[,\s]+", walkerItems.get("projects") or "")
-        projects = [s for s in rawPrjs if s]
-        if len(projects) == 0:
-            projects = list(pathItems.keys())
+        projects = self._getCfg2Arr(walkerItems, "projects")
 
-        extensions = json.loads(walkerItems.get("extension"))
-        excludeDirs = json.loads(walkerItems.get("exclude_dir"))
-        excludeNames = json.loads(walkerItems.get("exclude_name"))
-
-        self.projects = projects
-        self.extensions = set(ext.lower() for ext in extensions)
-        self.excludeDirs = [ex.lower() for ex in excludeDirs]
-        self.excludeNames = [ex.lower() for ex in excludeNames]
+        self.projects = list(pathItems.keys()) if len(projects) == 0 else projects
+        self.extensions = self._getCfg2Arr(walkerItems, "extension", True)
+        self.excludeDirs = self._getCfg2Arr(walkerItems, "exclude_dir", True)
+        self.excludeNames = self._getCfg2Arr(walkerItems, "exclude_name", True)
         self.fileSleep = float(walkerItems.get("file_sleep"))
         self.fileMaxLines = int(walkerItems.get("file_max_lines"))
 
@@ -55,3 +47,10 @@ class Config:
         choose = input("\33[0;33m确认配置无误并继续? \33[00m (y/N) ")
         if choose.lower() != 'y':
             exit()
+
+    def _getCfg2Arr(self, items, key, toLower = False):
+        rawVals = re.split(r"[,\s]+", items.get(key) or "")
+        if toLower:
+            return [s.lower() for s in rawVals if s]
+        else:
+            return [s for s in rawVals if s]

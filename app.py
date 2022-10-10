@@ -19,7 +19,7 @@ def processProject(finder: FileFinder, project: string, fileMaxLines: int, fileS
     filesNum = 0
     totalLines = 0
     outfile = genOutFilename(project)
-    print("\r\nprocessing", project, "...")
+    print("\r\nprocessing", project)
     with open(outfile, "w") as dest:
         maxLinesFile = ['', 0]
         for file, title in finder.walk(project):
@@ -28,13 +28,13 @@ def processProject(finder: FileFinder, project: string, fileMaxLines: int, fileS
             lines, linesNum = processFile(file)
             dest.writelines(lines)
             totalLines += linesNum
-            print("\r{:<4d}".format(filesNum, linesNum), end="", flush=True)
+            print("\r{:<4d} files".format(filesNum, linesNum), end="", flush=True)
             if linesNum > maxLinesFile[1]:
                 maxLinesFile = [title, linesNum]
             if linesNum > fileMaxLines:
-                print("\r-> {} has {:,d} lines".format(title, linesNum), flush=True)
+                print("\r...{} has {:,d} lines".format(title, linesNum), flush=True)
             sleep(fileSleep)
-        print("\r=> {} files. max lines {:,d}: {}"
+        print("\r-> {} files. max lines {:,d}: {}"
               .format(filesNum, maxLinesFile[1], maxLinesFile[0]), flush=True)
     return project, filesNum, totalLines
 
@@ -65,7 +65,7 @@ def main():
     totalFiles = 0
     totalLines = 0
     for result in results:
-        print(tmpl.format(*result))
+        print(tmpl.format(result[0][:20], result[1], result[2]))
         totalFiles += result[1]
         totalLines += result[2]
     print("-------")
