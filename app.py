@@ -19,7 +19,7 @@ def processProject(finder: FileFinder, project: string, fileMaxLines: int, fileS
     filesNum = 0
     totalLines = 0
     outfile = genOutFilename(project)
-    print("\r\nprocessing", project)
+    print("\r\n\33[3;33m▷ processing {}\33[00m".format(project))
     with open(outfile, "w") as dest:
         maxLinesFile = ['', 0]
         for file, title in finder.walk(project):
@@ -32,9 +32,9 @@ def processProject(finder: FileFinder, project: string, fileMaxLines: int, fileS
             if linesNum > maxLinesFile[1]:
                 maxLinesFile = [title, linesNum]
             if linesNum > fileMaxLines:
-                print("\r...{} has {:,d} lines".format(title, linesNum), flush=True)
+                print("\r…{} has {:,d} lines".format(title, linesNum), flush=True)
             sleep(fileSleep)
-        print("\r-> {} files. max lines {:,d}: {}"
+        print("\r☞ {} files. max lines {:,d}: {}"
               .format(filesNum, maxLinesFile[1], maxLinesFile[0]), flush=True)
     return project, filesNum, totalLines
 

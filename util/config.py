@@ -15,12 +15,13 @@ class Config:
 
         parser = ConfigParser()
         if parser.read(userFile, encoding="utf-8"):
-            print("使用自定义配置：")
+            self._customized = True
         else:
+            self._customized = False
             parser.read(defaultFile, encoding="utf-8")
-            print("使用默认配置：")
 
         walkerItems = dict(parser.items("walker"))
+        self._prompt = bool(walkerItems.get("prompt"))
         self._pathItems = pathItems = dict(parser.items("project-path"))
         projects = self._getCfg2Arr(walkerItems, "projects")
 
@@ -37,18 +38,21 @@ class Config:
         return self._pathItems.get(project)
 
     def _ask(self):
+        msg = "Using customized configuration" if self._customized else "Using default configuration"
+        print("\33[1;37m{}\33[00m".format(msg))
         for key in self.__dict__.keys():
             if not key.startswith('_'):
-                print("\33[1;37m{:<16s}\33[00m{}".format(
-                    key+":", self.__dict__.get(key)))
-        # self._confirm()
+                print("{:<16s}{}".format(key+":", self.__dict__.get(key)))
+        print("-------")
+        self._confirm()
 
     def _confirm(self):
-        choose = input("\33[0;33m确认配置无误并继续? \33[00m (y/N) ")
-        if choose.lower() != 'y':
-            exit()
+        if self._prompt:
+            choose = input("\33[1;37mConfirm and continue? \33[00m (y/N) ")
+            if choose.lower() != 'y':
+                exit()
 
-    def _getCfg2Arr(self, items, key, toLower = False):
+    def _getCfg2Arr(self, items, key, toLower=False):
         rawVals = re.split(r"[,\s]+", items.get(key) or "")
         if toLower:
             return [s.lower() for s in rawVals if s]
