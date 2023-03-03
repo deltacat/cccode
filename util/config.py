@@ -20,8 +20,9 @@ class Config:
             self._customized = False
             parser.read(defaultFile, encoding="utf-8")
 
+        self._prompt = parser.getboolean("walker", "prompt")
+
         walkerItems = dict(parser.items("walker"))
-        self._prompt = bool(walkerItems.get("prompt"))
         self._pathItems = pathItems = dict(parser.items("project-path"))
         projects = self._getCfg2Arr(walkerItems, "projects")
 
