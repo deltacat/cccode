@@ -1,20 +1,20 @@
 import os
 import string
+from datetime import datetime
 
-from util.config import Config
+
+def _genOutFilename(base: string, name: string):
+    suffix = datetime.now().strftime(r"-%Y%m%d%H%M%S.src.txt")
+    return os.path.join(base, name + suffix)
 
 
-class FileFinder:
+class Project:
+    def __init__(self, name: string, outDir: string):
+        self.name = name
+        self.outFile = _genOutFilename(outDir, name)
 
-    def __init__(self, cfg: Config):
-        self.getProjectPath = cfg.getProjectPath
-        self.projects = cfg.projects
-        self.extensions = cfg.extensions
-        self.excludeNames = cfg.excludeNames
-        self.excludeDirs = cfg.excludeDirs
-
-    def walk(self, project: string):
-        rootPath = self.getProjectPath(project)
+    def walk(self):
+        rootPath = self.srcDir
         if not os.path.isabs(rootPath):
             rootPath = os.path.abspath(rootPath)
         for top, _, fs in os.walk(rootPath):
@@ -40,7 +40,7 @@ class FileFinder:
 
     def _validFile(self, filename: str):
         name, ext = os.path.splitext(filename)
-        ext = ext.replace('.', '')
+        ext = ext.replace(".", "")
 
         if name.startswith("."):
             return False

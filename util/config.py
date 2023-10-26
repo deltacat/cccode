@@ -1,61 +1,70 @@
-import re
-import string
-from configparser import ConfigParser
+import toml
+
+from util.project import Project
+
+
+def _merge(c1, c2):
+    for key in c2.keys():
+        if (key not in c1.keys()) or (not isinstance(c2[key], dict)):
+            c1[key] = c2[key]
+        else:
+            _merge(c1[key], c2[key])
 
 
 class Config:
-
     def __init__(self):
         """
         初始化配置类
         """
-
-        defaultFile = "config.ini"
-        userFile = "config.custom.ini"
-
-        parser = ConfigParser()
-        if parser.read(userFile, encoding="utf-8"):
+        data = toml.load("config.toml")
+        try:
+            ccUser = toml.load("config.custom.toml")
+            _merge(data, ccUser)
             self._customized = True
-        else:
+        except:
             self._customized = False
-            parser.read(defaultFile, encoding="utf-8")
-
-        self._prompt = parser.getboolean("walker", "prompt")
-
-        walkerItems = dict(parser.items("walker"))
-        self._pathItems = pathItems = dict(parser.items("project-path"))
-        projects = self._getCfg2Arr(walkerItems, "projects")
-
-        self.projects = list(pathItems.keys()) if len(projects) == 0 else projects
-        self.extensions = self._getCfg2Arr(walkerItems, "extension", True)
-        self.excludeDirs = self._getCfg2Arr(walkerItems, "exclude_dir", True)
-        self.excludeNames = self._getCfg2Arr(walkerItems, "exclude_name", True)
-        self.fileSleep = float(walkerItems.get("file_sleep"))
-        self.fileMaxLines = int(walkerItems.get("file_max_lines"))
-
+        common = data.get("common", {})
+        self._data = data
+        self._projects = data.get("projects", [])
+        self._prompt = common.get("prompt", True)
+        self.common = common
+        self.fileMaxLines = common.get("file_max_lines", 800)
+        self.fileSleep = common.get("file_sleep", 0.0005)
+        self.outDir = common.get("output_path", "output")
         self._ask()
 
-    def getProjectPath(self, project: string):
-        return self._pathItems.get(project)
+    def getProjects(self):
+        allProjects = self._projects
+        useProjects = list(filter(lambda p: p.get("enable", True), allProjects))
+        for prjCfg in useProjects:
+            name = prjCfg.get("name")
+            if not (name and len(name)):
+                continue
+            prj = Project(name, self.outDir)
+            prj.srcDir = prjCfg.get("src")
+            prjExts = prjCfg.get("extensions")
+            prj.extensions = prjExts if (prjExts and len(prjExts)) else self.common.get("extension")
+            prjExclN = prjCfg.get("exclude_name")
+            prj.excludeNames = prjExclN if (prjExclN and len(prjExclN)) else self.common.get("exclude_name")
+            prjExclD = prjCfg.get("exclude_dir")
+            prj.excludeDirs = prjExclD if (prjExclD and len(prjExclD)) else self.common.get("exclude_dir")
+            yield prj
+
+    def _show(self):
+        print(toml.dumps(self._data))
 
     def _ask(self):
         msg = "Using customized configuration" if self._customized else "Using default configuration"
         print("\33[1;37m{}\33[00m".format(msg))
-        for key in self.__dict__.keys():
-            if not key.startswith('_'):
-                print("{:<16s}{}".format(key+":", self.__dict__.get(key)))
+        self._show()
+        # for key in self.__dict__.keys():
+        #     if not key.startswith('_'):
+        #         print("{:<16s}{}".format(key+":", self.__dict__.get(key)))
         print("-------")
         self._confirm()
 
     def _confirm(self):
         if self._prompt:
             choose = input("\33[1;37mConfirm and continue? \33[00m (y/N) ")
-            if choose.lower() != 'y':
+            if choose.lower() != "y":
                 exit()
-
-    def _getCfg2Arr(self, items, key, toLower=False):
-        rawVals = re.split(r"[,\s]+", items.get(key) or "")
-        if toLower:
-            return [s.lower() for s in rawVals if s]
-        else:
-            return [s for s in rawVals if s]
