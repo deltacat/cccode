@@ -9,9 +9,28 @@ def _genOutFilename(base: string, name: string):
 
 
 class Project:
-    def __init__(self, name: string, outDir: string):
+    def __init__(self, name: string, srcDir: string, outDir: string):
         self.name = name
+        self.srcDir = srcDir
         self.outFile = _genOutFilename(outDir, name)
+
+    def _setSets(self, key, coms: [], prjs: []):
+        hasPrjCfg = prjs and len(prjs)
+        prjSet = set(prjs) if hasPrjCfg else set()
+        comSet = set(coms) if (coms and len(coms)) else set()
+        self.__dict__[key] = comSet.union(prjSet)
+        if (hasPrjCfg):
+            print('{}: {} {}'.format(self.name, key, self.__dict__[key]))
+        return self
+
+    def setExtensions(self, comExts: [], prjExts: []):
+        return self._setSets("extensions", comExts, prjExts)
+
+    def setExcludeNames(self, comExclNames: [], prjExclNames: []):
+        return self._setSets("excludeNames", comExclNames, prjExclNames)
+
+    def setExcludeDirs(self, comExclDirs: [], prjExclDirs: []):
+        return self._setSets("excludeDirs", comExclDirs, prjExclDirs)
 
     def walk(self):
         rootPath = self.srcDir
@@ -19,10 +38,8 @@ class Project:
             rootPath = os.path.abspath(rootPath)
         for top, _, fs in os.walk(rootPath):
             # cfs = [x.lower() for x in top.split(os.path.sep) if x]
-            if not self._validDir(top):
-                continue
-            for file in fs:
-                if self._validFile(file):
+            if self._validDir(top):
+                for file in filter(lambda f: self._validFile(f), fs):
                     fullpath = os.path.join(top, file)
                     cfs = [x for x in top.split(os.path.sep) if x]
                     if len(cfs) > 3:
@@ -42,14 +59,19 @@ class Project:
         name, ext = os.path.splitext(filename)
         ext = ext.replace(".", "")
 
+        # 排除 . 开头文件（一般为隐藏文件）
         if name.startswith("."):
             return False
 
+        # 排除配置中需排除的文件
         for en in self.excludeNames:
-            if name.lower().find(en) > -1:
+            finding = en.lower()
+            lName = filename.lower()
+            if lName.find(finding) > -1:
                 return False
 
-        if ext.lower() in self.extensions:
-            return True
+        # 排除不包含的文件类型
+        if ext.lower() not in self.extensions:
+            return False
 
-        return False
+        return True

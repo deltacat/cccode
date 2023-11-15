@@ -34,21 +34,14 @@ class Config:
         self._ask()
 
     def getProjects(self):
-        allProjects = self._projects
-        useProjects = list(filter(lambda p: p.get("enable", True), allProjects))
-        for prjCfg in useProjects:
+        for prjCfg in filter(lambda p: p.get("enable", True), self._projects):
             name = prjCfg.get("name")
-            if not (name and len(name)):
-                continue
-            prj = Project(name, self.outDir)
-            prj.srcDir = prjCfg.get("src")
-            prjExts = prjCfg.get("extensions")
-            prj.extensions = prjExts if (prjExts and len(prjExts)) else self.common.get("extension")
-            prjExclN = prjCfg.get("exclude_name")
-            prj.excludeNames = prjExclN if (prjExclN and len(prjExclN)) else self.common.get("exclude_name")
-            prjExclD = prjCfg.get("exclude_dir")
-            prj.excludeDirs = prjExclD if (prjExclD and len(prjExclD)) else self.common.get("exclude_dir")
-            yield prj
+            if name and len(name):
+                prj = Project(name, prjCfg.get("src"), self.outDir)
+                prj.setExtensions(self.common.get("extension"), prjCfg.get("extensions"))
+                prj.setExcludeDirs(self.common.get("exclude_dir"), prjCfg.get("exclude_dir"))
+                prj.setExcludeNames(self.common.get("exclude_name"), prjCfg.get("exclude_name"))
+                yield prj
 
     def _show(self):
         print(toml.dumps(self._data))
