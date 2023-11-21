@@ -19,8 +19,6 @@ class Project:
         prjSet = set(prjs) if hasPrjCfg else set()
         comSet = set(coms) if (coms and len(coms)) else set()
         self.__dict__[key] = comSet.union(prjSet)
-        if (hasPrjCfg):
-            print('{}: {} {}'.format(self.name, key, self.__dict__[key]))
         return self
 
     def setExtensions(self, comExts: [], prjExts: []):
@@ -41,14 +39,16 @@ class Project:
             if self._validDir(top):
                 for file in filter(lambda f: self._validFile(f), fs):
                     fullpath = os.path.join(top, file)
-                    cfs = [x for x in top.split(os.path.sep) if x]
+                    relativePath = fullpath.replace(rootPath, "")
+                    cfs = [x for x in relativePath.split(os.path.sep) if x]
                     if len(cfs) > 3:
                         cfs = cfs[-3:].copy()
-                    title = os.path.join(*cfs, file)
+                    title = os.path.join(*cfs)
                     yield fullpath, title
 
+    # 由于 os.walk 并非递归访问，无法仅判断“本级”文件夹，需对整个路径进行检查。对性能有一定影响。
     def _validDir(self, path: string):
-        # 由于 os.walk 并非递归访问，无法仅判断“本级”文件夹，需对整个路径进行检查。对性能有一定影响。
+        # 排除 "." 开头文件夹
         if path.find(os.path.sep + ".") > -1:
             return False
         if any(path.lower().find(x) > -1 for x in self.excludeDirs):
