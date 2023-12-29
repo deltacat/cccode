@@ -12,7 +12,7 @@ output_path = 'output'
 # 扫描的文件扩展名，逗号分隔
 extension = [ "java", "c", "cpp", "h", "hpp", "go", "vue", "js", "ts", "html", "htm", "css", "py", "py3", "php", "asp", "jsp" ]
 # 排除的目录名关键词，逗号分隔
-exclude_dir = [ "target", "node_modules", "build", "dist", "auth", "config", "assets", "test", "3rd" ]
+exclude_dir = [ "target", "node_modules", "build", "dist", "auth", "config", "assets", "test", "3rd", "release" ]
 # 排除的文件名关键词，逗号分隔
 exclude_name = [ "config", "permission", "auth", "security", "secure", "eslint", "gulp", ".min", "crypt" ]
 
