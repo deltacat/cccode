@@ -14,20 +14,20 @@ class Project:
         self.srcDir = srcDir
         self.outFile = _genOutFilename(outDir, name)
 
-    def _setSets(self, key, coms: [], prjs: []):
+    def _setSets(self, key, coms: list[str], prjs: list[str]):
         hasPrjCfg = prjs and len(prjs)
         prjSet = set(prjs) if hasPrjCfg else set()
         comSet = set(coms) if (coms and len(coms)) else set()
         self.__dict__[key] = comSet.union(prjSet)
         return self
 
-    def setExtensions(self, comExts: [], prjExts: []):
+    def setExtensions(self, comExts: list[str], prjExts: list[str]):
         return self._setSets("extensions", comExts, prjExts)
 
-    def setExcludeNames(self, comExclNames: [], prjExclNames: []):
+    def setExcludeNames(self, comExclNames: list[str], prjExclNames: list[str]):
         return self._setSets("excludeNames", comExclNames, prjExclNames)
 
-    def setExcludeDirs(self, comExclDirs: [], prjExclDirs: []):
+    def setExcludeDirs(self, comExclDirs: list[str], prjExclDirs: list[str]):
         return self._setSets("excludeDirs", comExclDirs, prjExclDirs)
 
     def walk(self):

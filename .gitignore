@@ -4,3 +4,4 @@ config.custom.*
 __pycache__
 /output
 /build
+.venv
